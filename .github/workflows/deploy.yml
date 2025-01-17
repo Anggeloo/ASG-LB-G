@@ -1,4 +1,4 @@
-name: Build and Deploy to QA and Main
+name: Build and Deploy to qa and Main
 
 on:
   push:
@@ -26,17 +26,11 @@ jobs:
       # 3. Build Docker Image
       - name: Build Docker Image
         run: |
-          REPO="ghcr.io/${{ github.repository_owner }}/my-app"
-          TAG=$(echo "${{ github.ref_name }}" | tr '[:upper:]' '[:lower:]')
-          docker build -t ${REPO}:${TAG} .
-
+          docker build -t ghcr.io/${{ github.repository_owner }}/my-website:${{ github.ref_name }} .
       # 4. Push Docker Image
       - name: Push Docker Image
         run: |
-          REPO="ghcr.io/${{ github.repository_owner }}/my-app"
-          TAG=$(echo "${{ github.ref_name }}" | tr '[:upper:]' '[:lower:]')
-          docker push ${REPO}:${TAG}
-
+          docker push ghcr.io/${{ github.repository_owner }}/my-website:${{ github.ref_name }}
   deploy-qa:
     runs-on: ubuntu-latest
     needs: build
@@ -44,37 +38,31 @@ jobs:
 
     steps:
       # 5. Deploy to QA Instance 1
-      - name: Deploy to QA Instance 1
+      - name: Deploy to qa Instance 1
         uses: appleboy/ssh-action@v0.1.7
         with:
-          host: ${{ secrets.QA_INSTANCE_1 }}
+          host: ${{ secrets.qa_INSTANCE_1 }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
           script: |
-            REPO="ghcr.io/${{ github.repository_owner }}/my-app"
-            TAG="qa"
             docker login ghcr.io -u ${{ secrets.GHCR_ACTOR }} -p ${{ secrets.GHCR_TOKEN }}
-            docker pull ${REPO}:${TAG}
-            docker stop my-app || true
-            docker rm my-app || true
-            docker run -d --name my-app -p 80:80 ${REPO}:${TAG}
-
+            docker pull ghcr.io/${{ github.repository_owner }}/my-website:qa
+            docker stop my-website || true
+            docker rm my-website || true
+            docker run -d --name my-website -p 80:80 ghcr.io/${{ github.repository_owner }}/my-website:qa
       # 6. Deploy to QA Instance 2
-      - name: Deploy to QA Instance 2
+      - name: Deploy to qa Instance 2
         uses: appleboy/ssh-action@v0.1.7
         with:
-          host: ${{ secrets.QA_INSTANCE_2 }}
+          host: ${{ secrets.qa_INSTANCE_2 }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
           script: |
-            REPO="ghcr.io/${{ github.repository_owner }}/my-app"
-            TAG="qa"
             docker login ghcr.io -u ${{ secrets.GHCR_ACTOR }} -p ${{ secrets.GHCR_TOKEN }}
-            docker pull ${REPO}:${TAG}
-            docker stop my-app || true
-            docker rm my-app || true
-            docker run -d --name my-app -p 80:80 ${REPO}:${TAG}
-
+            docker pull ghcr.io/${{ github.repository_owner }}/my-website:qa
+            docker stop my-website || true
+            docker rm my-website || true
+            docker run -d --name my-website -p 80:80 ghcr.io/${{ github.repository_owner }}/my-website:qa
   deploy-main:
     runs-on: ubuntu-latest
     needs: build
@@ -89,10 +77,8 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
           script: |
-            REPO="ghcr.io/${{ github.repository_owner }}/my-app"
-            TAG="main"
             docker login ghcr.io -u ${{ secrets.GHCR_ACTOR }} -p ${{ secrets.GHCR_TOKEN }}
-            docker pull ${REPO}:${TAG}
-            docker stop my-app || true
-            docker rm my-app || true
-            docker run -d --name my-app -p 80:80 ${REPO}:${TAG}
+            docker pull ghcr.io/${{ github.repository_owner }}/my-website:main
+            docker stop my-website || true
+            docker rm my-website || true
+            docker run -d --name my-website -p 80:80 ghcr.io/${{ github.repository_owner }}/my-website:main
