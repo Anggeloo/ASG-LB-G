@@ -1,4 +1,4 @@
-name: Build and Deploy to qa and Main
+name: Build and Deploy to QA and Main
 
 on:
   push:
@@ -26,59 +26,59 @@ jobs:
       # 3. Build Docker Image
       - name: Build Docker Image
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/my-website:${{ github.ref_name }} .
+          # Convert both repository owner and ref_name to lowercase
+          OWNER=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')
+          TAG=$(echo ${{ github.ref_name }} | tr '[:upper:]' '[:lower:]')
+          docker build -t ghcr.io/$OWNER/my-website:$TAG .
+
       # 4. Push Docker Image
       - name: Push Docker Image
         run: |
-          docker push ghcr.io/${{ github.repository_owner }}/my-website:${{ github.ref_name }}
-  deploy-qa:
+          OWNER=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')
+          TAG=$(echo ${{ github.ref_name }} | tr '[:upper:]' '[:lower:]')
+          docker push ghcr.io/$OWNER/my-website:$TAG
+
+  deploy-QA:
     runs-on: ubuntu-latest
     needs: build
     if: github.ref_name == 'qa'
 
     steps:
       # 5. Deploy to QA Instance 1
-      - name: Deploy to qa Instance 1
+      - name: Deploy to QA Instance 1
         uses: appleboy/ssh-action@v0.1.7
         with:
-          host: ${{ secrets.qa_INSTANCE_1 }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
+          host: ${{ secrets.QA1_DNS }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             docker login ghcr.io -u ${{ secrets.GHCR_ACTOR }} -p ${{ secrets.GHCR_TOKEN }}
             docker pull ghcr.io/${{ github.repository_owner }}/my-website:qa
             docker stop my-website || true
             docker rm my-website || true
             docker run -d --name my-website -p 80:80 ghcr.io/${{ github.repository_owner }}/my-website:qa
+
       # 6. Deploy to QA Instance 2
-      - name: Deploy to qa Instance 2
+      - name: Deploy to QA Instance 2
         uses: appleboy/ssh-action@v0.1.7
         with:
-          host: ${{ secrets.qa_INSTANCE_2 }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
+          host: ${{ secrets.QA2_DNS }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             docker login ghcr.io -u ${{ secrets.GHCR_ACTOR }} -p ${{ secrets.GHCR_TOKEN }}
             docker pull ghcr.io/${{ github.repository_owner }}/my-website:qa
             docker stop my-website || true
             docker rm my-website || true
             docker run -d --name my-website -p 80:80 ghcr.io/${{ github.repository_owner }}/my-website:qa
+
   deploy-main:
     runs-on: ubuntu-latest
     needs: build
     if: github.ref_name == 'main'
 
     steps:
-      # 7. Deploy to Main Auto Scaling Group
-      - name: Deploy to Main via Auto Scaling
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.MAIN_LB_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
-          script: |
-            docker login ghcr.io -u ${{ secrets.GHCR_ACTOR }} -p ${{ secrets.GHCR_TOKEN }}
-            docker pull ghcr.io/${{ github.repository_owner }}/my-website:main
-            docker stop my-website || true
-            docker rm my-website || true
-            docker run -d --name my-website -p 80:80 ghcr.io/${{ github.repository_owner }}/my-website:main
+      # 7. Update Main Image for Auto Scaling Group
+      - name: Update Main Docker Image for ASG
+        run: |
+          echo "The latest Docker image has been built and pushed to the registry. Auto Scaling Group will pull it automatically."
