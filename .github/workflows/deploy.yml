@@ -52,11 +52,13 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
           script: |
+            OWNER=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')
+            TAG=$(echo qa | tr '[:upper:]' '[:lower:]') # Fuerza minúsculas en la etiqueta
             docker login ghcr.io -u ${{ secrets.GHCR_ACTOR }} -p ${{ secrets.GHCR_TOKEN }}
-            docker pull ghcr.io/${{ github.repository_owner }}/my-website:qa
+            docker pull ghcr.io/$OWNER/my-website:$TAG
             docker stop my-website || true
             docker rm my-website || true
-            docker run -d --name my-website -p 80:80 ghcr.io/${{ github.repository_owner }}/my-website:qa
+            docker run -d --name my-website -p 80:80 ghcr.io/$OWNER/my-website:$TAG
 
       # 6. Deploy to QA Instance 2
       - name: Deploy to QA Instance 2
