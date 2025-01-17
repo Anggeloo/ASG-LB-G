@@ -26,14 +26,16 @@ jobs:
       # 3. Build Docker Image
       - name: Build Docker Image
         run: |
+          REPO="ghcr.io/${{ github.repository_owner }}/my-website"
           TAG=$(echo "${{ github.ref_name }}" | tr '[:upper:]' '[:lower:]')
-          docker build -t ghcr.io/${{ github.repository_owner }}/my-website:$TAG .
+          docker build -t ${REPO}:${TAG} .
 
       # 4. Push Docker Image
       - name: Push Docker Image
         run: |
+          REPO="ghcr.io/${{ github.repository_owner }}/my-website"
           TAG=$(echo "${{ github.ref_name }}" | tr '[:upper:]' '[:lower:]')
-          docker push ghcr.io/${{ github.repository_owner }}/my-website:$TAG
+          docker push ${REPO}:${TAG}
 
   deploy-qa:
     runs-on: ubuntu-latest
@@ -49,11 +51,13 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
           script: |
+            REPO="ghcr.io/${{ github.repository_owner }}/my-website"
+            TAG="qa"
             docker login ghcr.io -u ${{ secrets.GHCR_ACTOR }} -p ${{ secrets.GHCR_TOKEN }}
-            docker pull ghcr.io/${{ github.repository_owner }}/my-website:qa
+            docker pull ${REPO}:${TAG}
             docker stop my-website || true
             docker rm my-website || true
-            docker run -d --name my-website -p 80:80 ghcr.io/${{ github.repository_owner }}/my-website:qa
+            docker run -d --name my-website -p 80:80 ${REPO}:${TAG}
 
       # 6. Deploy to QA Instance 2
       - name: Deploy to QA Instance 2
@@ -63,11 +67,13 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
           script: |
+            REPO="ghcr.io/${{ github.repository_owner }}/my-website"
+            TAG="qa"
             docker login ghcr.io -u ${{ secrets.GHCR_ACTOR }} -p ${{ secrets.GHCR_TOKEN }}
-            docker pull ghcr.io/${{ github.repository_owner }}/my-website:qa
+            docker pull ${REPO}:${TAG}
             docker stop my-website || true
             docker rm my-website || true
-            docker run -d --name my-website -p 80:80 ghcr.io/${{ github.repository_owner }}/my-website:qa
+            docker run -d --name my-website -p 80:80 ${REPO}:${TAG}
 
   deploy-main:
     runs-on: ubuntu-latest
@@ -83,8 +89,10 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
           script: |
+            REPO="ghcr.io/${{ github.repository_owner }}/my-website"
+            TAG="main"
             docker login ghcr.io -u ${{ secrets.GHCR_ACTOR }} -p ${{ secrets.GHCR_TOKEN }}
-            docker pull ghcr.io/${{ github.repository_owner }}/my-website:main
+            docker pull ${REPO}:${TAG}
             docker stop my-website || true
             docker rm my-website || true
-            docker run -d --name my-website -p 80:80 ghcr.io/${{ github.repository_owner }}/my-website:main
+            docker run -d --name my-website -p 80:80 ${REPO}:${TAG}
