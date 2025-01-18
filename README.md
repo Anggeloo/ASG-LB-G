@@ -8,18 +8,18 @@ The project consists of the configuration and deployment of a simple web applica
 A pipeline has been configured in GitHub Actions to automate the following stages:
 
 ### 1. 🏗️ Build and Push of Docker Images.
-**Source code checkout:** The code is checked out from the repository.
-**Docker image build:** An image is generated based on the current code.
-**Publishing to the container registry:** The Docker image is published to ghcr.io.
+- **Source code checkout:** The code is checked out from the repository.
+- **Docker image build:** An image is generated based on the current code.
+- **Publishing to the container registry:** The Docker image is published to ghcr.io.
 
 ### 2. 📤 Deployment to QA Environment.
 When a push is made to the qa branch, it is automatically deployed to two QA instances:
-**🔄 Docker image pull:** the latest version of the image is downloaded from the registry.
-**🛠️ Instance configuration:** Stops and removes any running containers, and deploys the new image.
+- **🔄 Docker image pull:** the latest version of the image is downloaded from the registry.
+- **🛠️ Instance configuration:** Stops and removes any running containers, and deploys the new image.
 
 ### 3. 🌐 Deployment in Production.
 When a push is performed to the main branch:
-🖼️ The most recent Docker image becomes available for use by the Auto Scaling Group, ensuring that all active instances have the most recent version.
+- 🖼️ The most recent Docker image becomes available for use by the Auto Scaling Group, ensuring that all active instances have the most recent version.
 
 ### 🗂️ File Structure
 - **index.html:** Static web page with a basic layout and a welcome message.
